@@ -41,7 +41,7 @@ export default function App() {
         <Header />
 
         {/* 步骤条 */}
-        <div className="flex items-center justify-center gap-0.5 sm:gap-3 mb-10 px-1">
+        <div className="flex items-center justify-center gap-0.5 sm:gap-3 mb-5 sm:mb-10 px-1">
           {['上传简历', '解析结果', '岗位匹配', '评分报告'].map((label, i) => (
             <div key={label} className="flex items-center gap-0.5 sm:gap-3">
               <button
@@ -51,15 +51,15 @@ export default function App() {
                   else if (i === 2 && resumeData) setActiveStep(2)
                   else if (i === 3 && matchData) setActiveStep(3)
                 }}
-                className={`flex items-center gap-1 sm:gap-2 px-1.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 ${
+                className={`flex items-center gap-1 sm:gap-2 px-1.5 sm:px-4 py-1 sm:py-2 rounded-full text-[11px] sm:text-sm font-medium border transition-colors duration-300 whitespace-nowrap ${
                   activeStep === i
-                    ? 'bg-cosmos-600/30 text-cosmos-200 border border-cosmos-500/40 shadow-lg shadow-cosmos-500/10'
+                    ? 'bg-cosmos-600/30 text-cosmos-200 border-cosmos-500/40 shadow-lg shadow-cosmos-500/10'
                     : i <= activeStep || (i === 1 && resumeData) || (i === 3 && matchData)
-                      ? 'text-white/50 hover:text-white/70 cursor-pointer'
-                      : 'text-white/20 cursor-default'
+                      ? 'border-transparent text-white/50 hover:text-white/70 cursor-pointer'
+                      : 'border-transparent text-white/20 cursor-default'
                 }`}
               >
-                <span className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0 ${
+                <span className={`w-4 h-4 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[9px] sm:text-xs font-bold shrink-0 ${
                   activeStep === i
                     ? 'bg-cosmos-500 text-white'
                     : i < activeStep || (i === 1 && resumeData) || (i === 3 && matchData)
@@ -70,36 +70,44 @@ export default function App() {
                 </span>
                 <span>{label}</span>
               </button>
-              {i < 3 && <div className={`hidden sm:block w-8 h-px ${i < activeStep ? 'bg-cosmos-500/40' : 'bg-white/10'}`} />}
+              {i < 3 && <div className={`w-3 sm:w-8 h-px shrink-0 ${i < activeStep ? 'bg-cosmos-500/40' : 'bg-white/10'}`} />}
             </div>
           ))}
         </div>
 
-        {/* 主内容 */}
-        <div className="animate-fade-in">
+        {/* 主内容，各面板独立挂载动画，切换时不互相干扰 */}
+        <div>
           {activeStep === 0 && (
-            <UploadSection onSuccess={handleUploadSuccess} />
+            <div key="step-upload" className="animate-fade-in">
+              <UploadSection onSuccess={handleUploadSuccess} />
+            </div>
           )}
           {activeStep === 1 && resumeData && (
-            <ResumeResult
-              data={resumeData}
-              onNext={() => setActiveStep(2)}
-              onReset={handleReset}
-            />
+            <div key="step-result" className="animate-fade-in">
+              <ResumeResult
+                data={resumeData}
+                onNext={() => setActiveStep(2)}
+                onReset={handleReset}
+              />
+            </div>
           )}
           {activeStep === 2 && resumeData && (
-            <MatchSection
-              resumeId={resumeData.resume_id}
-              onSuccess={handleMatchSuccess}
-              onBack={() => setActiveStep(1)}
-            />
+            <div key="step-match" className="animate-fade-in">
+              <MatchSection
+                resumeId={resumeData.resume_id}
+                onSuccess={handleMatchSuccess}
+                onBack={() => setActiveStep(1)}
+              />
+            </div>
           )}
           {activeStep === 3 && matchData && (
-            <MatchResult
-              data={matchData}
-              onBack={() => setActiveStep(2)}
-              onReset={handleReset}
-            />
+            <div key="step-report" className="animate-fade-in">
+              <MatchResult
+                data={matchData}
+                onBack={() => setActiveStep(2)}
+                onReset={handleReset}
+              />
+            </div>
           )}
         </div>
       </div>

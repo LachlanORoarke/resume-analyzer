@@ -12,10 +12,6 @@
 - 结果都是JSON格式返回的，前端页面也做了可视化展示
 - 支持Redis缓存，同一份简历不会重复解析（这个是可选的，不装Redis也能跑）
 
-## 用了什么技术
-
-后端是Python写的，用的FastAPI框架。PDF解析用的pdfplumber，AI部分调的是DeepSeek的API（兼容OpenAI格式，换别的模型也行，改下配置就好）。前端用React + Vite + Tailwind CSS搭的，深色主题。
-
 ## 怎么在本地跑起来
 
 ### 环境要求
@@ -80,11 +76,49 @@ npm run dev
 
 **GET /api/resume/list** - 看当前已经解析过的简历列表。
 
-## 项目结构
+## 项目架构
 
-后端代码在 backend/ 下面，main.py 是入口，api/ 放路由，services/ 放业务逻辑（pdf解析、ai提取、匹配评分、缓存），models/ 放数据结构定义，core/ 放配置。
+整体是前后端分离的架构。前端是纯静态页面，构建完就是一堆HTML/CSS/JS文件，可以直接托管到任何静态服务器上。后端是一个HTTP服务，前端通过API请求和它通信。
 
-前端在 frontend/ 下面，App.jsx 是主组件，components/ 里面按功能分了几个组件：上传、解析结果展示、岗位匹配输入、匹配报告。
+请求链路大概是这样的：用户在浏览器里上传PDF → 前端把文件POST到后端的上传接口 → 后端用pdfplumber解析PDF文本 → 把原始文本发给DeepSeek做结构化提取 → AI返回JSON格式的简历信息 → 后端存到内存（或Redis缓存）然后返回给前端 → 前端展示解析结果。岗位匹配是另一条链路：用户输入岗位描述 → 前端POST匹配接口带上简历ID和岗位描述 → 后端把简历内容和岗位描述一起送给AI 做四个维度的评分（技能、经验、学历、综合） → 返回JSON → 前端展示雷达图和详细报告。
+
+缓存这一层是可选的。如果开了Redis，相同的简历（按文件SHA256判断）不会重复调AI，直接返回缓存结果。不开Redis也完全能用，就每次都重新解析。
+
+## 技术选型
+
+后端用Python 3.12 + FastAPI。FastAPI自带Swagger文档、请求参数校验，异步支持也好，适合这种IO密集的场景（主要等AI接口响应）。PDF解析用pdfplumber，相比PyPDF2在处理表格和复杂排版方面更准确。AI调用部分封装了OpenAI SDK，指向DeepSeek的接口地址，这样以后想换模型（GPT-4、Claude之类的）只需要改配置，代码逻辑不用动。数据结构用Pydantic定义，类型安全，反序列化也方便。
+
+前端用React 18 + Vite + Tailwind CSS。Vite的构建速度快，HMR响应也快，开发体验比webpack好不少。Tailwind用了JIT模式，只打包实际用到的样式，最终CSS很小。组件用lucide-react做图标，不引入整个图标库，按需导入。整体视觉是深色宇宙主题，用了glassmorphism风格的卡片，渐变文字和动画用CSS keyframes实现。
+
+部署层面后端用Docker容器化，方便迁移，前端用Nginx直接serve静态文件，Nginx同时做反向代理把/api/请求转发到后端容器。
+
+## 部署方式
+
+服务器部署（后端+前端）需要一台Linux服务器，装好Docker和Nginx。
+
+先构建前端静态文件：
+
+```bash
+cd frontend
+npm install
+npm run build
+# 产物在 frontend/dist/ 目录下
+```
+
+然后把整个项目传到服务器，在服务器上执行：
+
+```bash
+chmod +x /opt/resume-analyzer/deploy/deploy.sh
+bash /opt/resume-analyzer/deploy/deploy.sh
+```
+
+deploy.sh会自动完成：构建后端Docker镜像、启动容器（映射9000端口）、把Nginx配置软链到sites-enabled、reload Nginx。完成后访问服务器IP就能用了，/api/ 路径自动代理到后端容器。
+
+后端需要先在服务器上创建 backend/.env 文件写好API Key，不然AI功能不可用。
+
+GitHub Pages只能托管前端静态文件，后端需要另起一台服务器。仓库里有 .github/workflows/deploy-pages.yml，push到main分支时会自动构建并把dist部署到gh-pages分支。前端默认连接的API地址可以在 frontend/src/api.js 里改成你的后端地址。
+
+阿里云Serverless部署参考根目录的 s.yaml，按Serverless Devs的文档操作即可。
 
 ## License
 
