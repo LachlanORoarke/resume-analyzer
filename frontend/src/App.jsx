@@ -41,9 +41,9 @@ export default function App() {
         <Header />
 
         {/* 步骤条 */}
-        <div className="flex items-center justify-center gap-3 mb-10">
+        <div className="flex items-center justify-center gap-0.5 sm:gap-3 mb-10 px-1">
           {['上传简历', '解析结果', '岗位匹配', '评分报告'].map((label, i) => (
-            <div key={label} className="flex items-center gap-3">
+            <div key={label} className="flex items-center gap-0.5 sm:gap-3">
               <button
                 onClick={() => {
                   if (i === 0) setActiveStep(0)
@@ -51,7 +51,7 @@ export default function App() {
                   else if (i === 2 && resumeData) setActiveStep(2)
                   else if (i === 3 && matchData) setActiveStep(3)
                 }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                className={`flex items-center gap-1 sm:gap-2 px-1.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 ${
                   activeStep === i
                     ? 'bg-cosmos-600/30 text-cosmos-200 border border-cosmos-500/40 shadow-lg shadow-cosmos-500/10'
                     : i <= activeStep || (i === 1 && resumeData) || (i === 3 && matchData)
@@ -59,7 +59,7 @@ export default function App() {
                       : 'text-white/20 cursor-default'
                 }`}
               >
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                <span className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0 ${
                   activeStep === i
                     ? 'bg-cosmos-500 text-white'
                     : i < activeStep || (i === 1 && resumeData) || (i === 3 && matchData)
@@ -68,9 +68,9 @@ export default function App() {
                 }`}>
                   {i + 1}
                 </span>
-                <span className="hidden sm:inline">{label}</span>
+                <span>{label}</span>
               </button>
-              {i < 3 && <div className={`w-8 h-px ${i < activeStep ? 'bg-cosmos-500/40' : 'bg-white/10'}`} />}
+              {i < 3 && <div className={`hidden sm:block w-8 h-px ${i < activeStep ? 'bg-cosmos-500/40' : 'bg-white/10'}`} />}
             </div>
           ))}
         </div>
